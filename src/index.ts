@@ -20,5 +20,14 @@ app.use(
 app.get('/', (req: Request, res: Response, next: NextFunction) => {
     res.send(`Wedos prucul ${req.oidc.isAuthenticated()}`);
 });
+app.get('/do-verify', (req: Request, res: Response, next: NextFunction) => {
+    const publicKey = req.header('App-key');
+    if (publicKey === process.env.AUTH0_ARTIFICIAL_SECRET) {
+        // TODO : integrate logic from Auth0 verify
+
+    } else {
+        return res.send('Do not do this....');
+    }
+});
 
 app.listen(process.env.PORT, () => console.log(`Running...${process.env.APP_URL}:${process.env.PORT}`));
