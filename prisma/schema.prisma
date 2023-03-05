@@ -1,0 +1,55 @@
+generator client{
+    provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DB_URL")
+}
+
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  password    String?
+  username String?
+  email_verified Boolean @default(false)
+  created DateTime @default(now())
+  updated DateTime?
+  @@map("users")
+}
+
+model Cache {
+    key String @unique
+    value JSON?
+}
+
+model Profile {
+    id      Int      @id @default(autoincrement())
+    source String
+    source_id String
+    nickname String?
+    given_name String?
+    family_name String?
+    phone String?
+    birthday DateTime?
+    bio String?
+    picture String?
+    metadata JSON?
+    website_urls JSON?
+    gender Gender
+    gender_custom String?
+    refer_as Refer
+    lastupdated DateTime
+    @@map("user_profiles")
+}
+enum Gender {
+    Male
+    Female
+    RatherNotSay
+    Custom
+}
+enum Refer {
+    Male
+    Female
+    Other
+}

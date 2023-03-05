@@ -1,0 +1,60 @@
+<div class="container" style="width: 500px">
+  <form method="post">
+    <div class="row">
+      <div class="form-group col-md-6">
+        <label for="form_given_name">Name</label>
+        <input type="text" name="given_name" class="form-control" id="form_given_name" placeholder="Name">
+      </div>
+      <div class="form-group col-md-6">
+        <label for="form_family_name">Family name</label>
+        <input type="text" name="family_name" class="form-control" id="form_family_name" placeholder="Family name">
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-md-12">
+        <label for="form_phone">Cellphone</label>
+        <input type="text" name="phone" class="form-control" id="form_phone" placeholder="Name">
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-md-12">
+        <label for="form_gender">Gender</label>
+        <select id="form_gender" name="gender" class="form-control">
+          <option value="" hidden disabled selected>Select gender</option>
+          <option value="1">Female</option>
+          <option value="0">Male</option>
+          <option value="2">Rather not say</option>
+          <option value="3">Custom</option>
+        </select>
+      </div>
+      <div class="form-group col-md-12">
+        <label for="form_custom_gender">Custom</label>
+        <input type="text" name="custom_gender" class="form-control" id="form_custom_gender" placeholder="What is your gender?">
+      </div>
+      <div class="form-group col-md-12">
+        <label for="form_refer_as">Please refer to me as</label>
+        <select id="form_refer_as" name="refer_as" class="form-control">
+          <option value="" hidden disabled selected>Please refer to me as</option>
+          <option value="1">Female</option>
+          <option value="0">Male</option>
+          <option value="2">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-md-12">
+        <label for="form_email">Email</label>
+        <input type="email" name="email" class="form-control" id="form_email" placeholder="Email">
+      </div>
+      <div class="form-group col-md-12">
+        <label for="form_password">Password</label>
+        <input type="password" name="password" class="form-control" id="form_password" placeholder="Password">
+      </div>
+      <div class="form-group col-md-12">
+        <label for="form_password_confirm">Retype your password</label>
+        <input type="password" name="password_confirm" class="form-control" id="form_password_confirm" placeholder="Retype your password">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Sign in</button>
+  </form>
+</div>
