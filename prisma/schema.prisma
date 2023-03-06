@@ -1,5 +1,5 @@
-generator client{
-    provider = "prisma-client-js"
+generator client {
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,48 +8,66 @@ datasource db {
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  password    String?
-  username String?
-  email_verified Boolean @default(false)
-  created DateTime @default(now())
-  updated DateTime?
+  id             Int       @id @default(autoincrement()) @db.UnsignedInt
+  email          String    @db.VarChar(30)
+  password       String    @db.VarChar(200)
+  username       String?   @db.VarChar(50)
+  confirmed      DateTime? @db.DateTime(0)
+  email_verified Boolean?  @default(false)
+  token          String?   @db.VarChar(200)
+  created        DateTime? @default(now()) @db.Timestamp(0)
+  updated        DateTime? @db.DateTime(0)
+  nickname       String?   @db.VarChar(30)
+  metadata       String?   @db.VarChar(30)
+
   @@map("users")
 }
 
-model Cache {
-    key String @unique
-    value JSON?
+model Profile {
+  id            Int                   @id @default(autoincrement()) @db.UnsignedInt
+  source_id     String?               @db.VarChar(100)
+  source        String?               @db.VarChar(50)
+  nickname      String?               @db.VarChar(100)
+  given_name    String?               @db.VarChar(50)
+  family_name   String?               @db.VarChar(50)
+  phone         String?               @db.VarChar(30)
+  birthday      DateTime?             @db.Date
+  bio           String?               @db.Text
+  picture       String?               @db.VarChar(200)
+  metadata      Json?
+  website_urls  Json?
+  gender        user_profiles_gender?
+  gender_custom String?               @db.VarChar(30)
+  refer_as      Refer?
+  lastupdated   DateTime?             @db.DateTime(0)
+
+  @@map("user_profiles")
 }
 
-model Profile {
-    id      Int      @id @default(autoincrement())
-    source String
-    source_id String
-    nickname String?
-    given_name String?
-    family_name String?
-    phone String?
-    birthday DateTime?
-    bio String?
-    picture String?
-    metadata JSON?
-    website_urls JSON?
-    gender Gender
-    gender_custom String?
-    refer_as Refer
-    lastupdated DateTime
-    @@map("user_profiles")
+model cache {
+  key     String    @id @db.VarChar(100)
+  value   Json?
+  created DateTime? @default(now()) @db.Timestamp(0)
+  updated DateTime? @db.DateTime(0)
 }
-enum Gender {
-    Male
-    Female
-    RatherNotSay
-    Custom
+
+model tokens {
+  id      Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id Int?
+  token   String?   @unique(map: "token") @db.VarChar(100)
+  expired DateTime? @db.DateTime(0)
+  created DateTime? @default(now()) @db.Timestamp(0)
 }
+
 enum Refer {
-    Male
-    Female
-    Other
+  Male
+  Female
+  Other
+}
+
+enum user_profiles_gender {
+  Male
+  Female
+  Rather_not_say @map("Rather not say")
+  Custom
 }

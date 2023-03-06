@@ -1,4 +1,6 @@
 import { body } from "express-validator";
+import { PrismaClient } from '@prisma/client';
+
 const signupRequest = [
     body('given_name', 'empty name')
         .trim()
@@ -11,7 +13,22 @@ const signupRequest = [
         .trim()
         .isLength({ max: 30 })
         .withMessage('max 30'),
-    body('email').isEmail(),
+    body('email')
+        .isEmail()
+        .withMessage('Provide a valid email')
+        .custom(async (value) => {
+            const prisma = new PrismaClient();
+            const findUser = await prisma.user.findMany({
+                take: 1,
+                where: {
+                    email: value,
+                }
+            });
+            if (findUser && findUser.length > 0) {
+                throw new Error('Email is already exist');
+            }
+            return true;
+        }),
     body('phone').optional({ checkFalsy: true })
         .custom((value) => {
             if (value.match(/[0-9() +-]/g).length == value.length) {
