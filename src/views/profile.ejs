@@ -5,9 +5,10 @@
       <div class="card">
         <div class="card-body">
           <div class="d-flex flex-column justify-content-center">
-            <div class="d-flex justify-content-center">
-              <img style="width: 200px" src="<%= user.picture %>">
+            <div class="d-flex justify-content-center ">
+              <img style="width: 200px" id="profile-picture" src="<%= user.picture %>">
             </div>
+            <input type="file" id="file-upload" style="visibility: hidden;"/>
             <div class="text-center mt-1">
               <button class="btn btn-sm btn-primary edit-picture">Edit</button>
             </div>

@@ -1,8 +1,9 @@
 import path from 'path';
+import fs from 'fs';
 
 import express, { Request, Response, NextFunction, Express } from 'express';
 import * as dotenv from 'dotenv';
-import { auth } from 'express-openid-connect';
+import { auth, requiresAuth } from 'express-openid-connect';
 import { validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -10,10 +11,15 @@ import * as crypto from 'crypto';
 import FormData = require('form-data');
 import Mailgun from 'mailgun.js';
 import axios from 'axios';
+import ImageKit from 'imagekit';
+import { UploadResponse, IKCallback } from 'imagekit/dist/libs/interfaces';
+import multer from 'multer';
+const upload = multer({ dest: 'uploads/'});
 
 dotenv.config();
 
 import signupRequest from './requests/signup_request';
+
 let auth0RequestToken: string | null = null;
 let auth0ExpiredToken = 0;
 
@@ -97,11 +103,12 @@ app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     }
     return res.render('parts_layout', { title: 'Work at Aha', page, user, autenticated });
 });
-app.get('/profile', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/profile', requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
     let page = 'profile';
     if (!req.oidc.isAuthenticated()) {
         return res.redirect('/');
     }
+    console.log(req.oidc.user);
     let user = req.oidc.user;
     const objUser = {
         nickname: user?.nickname,
@@ -254,6 +261,67 @@ app.get('/verify', async (req: Request, res: Response, next: NextFunction) => {
         }
     }
     return res.send('Account not found');
+});
+app.get('/dashboard', requiresAuth(), async (req:Request, res: Response, next: NextFunction) => {
+    res.send('auk auk');
+});
+app.post('/update-avatar', requiresAuth(), upload.single('image'), async (req: Request, res: Response, next: NextFunction) => {
+    const imagekit = new ImageKit({
+        publicKey : process.env.IMAGEKIT_PUBLIC_KEY as string,
+        privateKey : process.env.IMAGEKIT_PRIVATE_KEY as string,
+        urlEndpoint : process.env.IMAGEKIT_URL as string
+    });
+    const user = req.oidc.user;
+    const subs = user?.sub.split('|');
+    subs[0] = subs[0] === 'auth0' ? 'database' : subs[0];
+    const file = fs.readFileSync(path.join(__dirname, '..', req.file?.path as string));
+    imagekit.upload({
+        file: file,
+        fileName: req.file?.originalname as string,
+        extensions: [
+            {
+                name: "google-auto-tagging",
+                maxTags: 5,
+                minConfidence: 95
+            }
+        ]
+    }).then(async response => {
+        console.log(response);
+        const prisma = new PrismaClient({
+            log: ['query', 'info', 'warn', 'error'],
+        });
+        const profile = await prisma.profile.findFirst({
+            where: {
+                source: subs[0],
+                source_id: subs[1],
+            }
+        });
+        if (profile) {
+            await prisma.profile.update({
+                where: {
+                    id: profile.id,
+                },
+                data: {
+                    picture: response.url,
+                },
+            });
+        } else {
+            await prisma.profile.create({
+                data: {
+                    source: subs[0],
+                    source_id: subs[1],
+                    picture: response.url,
+                    nickname: user?.nickname,
+                    given_name: user?.given_name,
+                    family_name: user?.family_name,
+                }
+            });
+        }
+        await prisma.$disconnect();
+        return res.status(201).json({message: 'Success change avatar', url: response.url});
+    }).catch(error => {
+        return res.status(403).json({message: 'Unable to upload', error: error.message});
+    });
 });
 
 app.listen(
