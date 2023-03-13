@@ -27,6 +27,8 @@ $(document).ready(() => {
             'email',
             'password',
             'password_confirm',
+            'new_password',
+            'current_password',
         ];
         for (var key of forms) {
             const elementId = `#form-help-${key.replace('_', '-')}`;
@@ -140,5 +142,78 @@ $(document).ready(() => {
         reader.readAsArrayBuffer(img);
         */
 
+    });
+    $('#form-update-profile').submit((e) => {
+        e.preventDefault();
+        const formData = $('#form-update-profile').serialize();
+        $.ajax({
+            type: 'put',
+            url: '/update-profile',
+            dataType: 'json',
+            data: formData,
+            success: (response, status) => {
+                console.log(status);
+                if (status === 'success') {
+                    location.reload();
+                } else {
+                    toastr.warning("There are some error during send your data");
+                }
+            },
+            error: (xhr, status, error) => {
+                if (xhr.status === 401) {
+                    clearFormError();
+                    // validation issue
+                    const { responseJSON } = xhr;
+                    const keysJson = Object.keys(responseJSON);
+                    for (var key of keysJson) {
+                        const elementId = `#form-help-${key.replace('_', '-')}`;
+                        $(elementId).html(responseJSON[key]);
+                    }
+                } else {
+                    toastr.error("There are some error during send your data. Please check again.");
+                }
+                console.log(error);
+                console.log('xhr');
+                console.log(xhr);
+            },
+        });
+    });
+    $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd'
+    });
+    $('#form-change-password').submit( e => {
+        e.preventDefault();
+        const formData = $('#form-change-password').serialize();
+        $.ajax({
+            type: 'post',
+            url: '',
+            dataType: 'json',
+            data: formData,
+            success: (response, status) => {
+                console.log(status);
+                if (status === 'success') {
+                    location.href = '/profile';
+                } else {
+                    toastr.warning("There are some error during send your data");
+                }
+            },
+            error: (xhr, status, error) => {
+                if (xhr.status === 401) {
+                    clearFormError();
+                    // validation issue
+                    const { responseJSON } = xhr;
+                    const keysJson = Object.keys(responseJSON);
+                    for (var key of keysJson) {
+                        const elementId = `#form-help-${key.replace('_', '-')}`;
+                        $(elementId).html(responseJSON[key]);
+                    }
+                } else {
+                    toastr.error("There are some error during send your data. Please check again.");
+                }
+                console.log(error);
+                console.log('xhr');
+                console.log(xhr);
+            },
+        });
     });
 })

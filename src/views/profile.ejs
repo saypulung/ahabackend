@@ -15,6 +15,11 @@
           </div>
         </div>
       </div>
+      <div class="mt-3">
+        <% if (user.sub === 'auth0'){ %>
+        <a href="/reset-password" class="btn btn-primary btn-sm">Change password</a>
+        <% } %>
+      </div>
     </div>
     <div class="col-md-8">
       <div class="card">
@@ -54,7 +59,7 @@
           </div>
         </div>
         <div class="card-body edit-profile-form collapse">
-          <form action="/save-profile">
+          <form id="form-update-profile" action="/save-profile">
             <div class="container">
               <div class="row">
                 <div class="form-group col-md-12">
@@ -80,15 +85,24 @@
               <div class="row">
                 <div class="form-group col-md-12">
                   <label for="form_phone">Cellphone</label>
-                  <input value="<%= user.phone %>" type="text" name="phone" class="form-control" id="form_phone" placeholder="Cellpone">
+                  <input
+                    value="<%= user.phone %>"
+                    type="text"
+                    name="phone"
+                    class="form-control"
+                    id="form_phone"
+                    placeholder="Cellpone">
                   <div id="form-help-phone" class="form-text"></div>
                 </div>
               </div>
               <div class="row">
                 <div class="form-group col-md-12">
                   <label for="form_gender">Gender</label>
-                  <select id="form_gender" name="gender" class="form-control">
-                    <option value="" hidden disabled selected>Select gender</option>
+                  <select
+                    id="form_gender"
+                    name="gender"
+                    class="form-control">
+                    <option value="" hidden selected>Select gender</option>
                     <option <%= user.gender === 'Female' ? 'selected' : '' %> value="1">Female</option>
                     <option <%= user.gender === 'Male' ? 'selected' : '' %> value="0">Male</option>
                     <option <%= user.gender === 'Rather not say' ? 'selected' : '' %> value="2">Rather not say</option>
@@ -98,38 +112,61 @@
                 </div>
                 <div class="form-group col-md-12 collapse --custom-gender <%= user.gender === 'Custom' ? 'show' : '' %>">
                   <label for="form_custom_gender">Custom</label>
-                  <input value="<%= user.gender_custom %>" type="text" name="custom_gender" class="form-control" id="form_custom_gender"
+                  <input
+                    value="<%= user.gender_custom %>"
+                    type="text" name="custom_gender"
+                    class="form-control"
+                    id="form_custom_gender"
                     placeholder="What is your gender?">
                   <div id="form-help-custom-gender" class="form-text"></div>
                 </div>
                 <div class="form-group col-md-12 collapse --custom-refer <%= user.gender === 'Custom' ? 'show' : '' %>">
                   <label for="form_refer_as">Please refer to me as</label>
                   <select id="form_refer_as" name="refer_as" class="form-control">
-                    <option value="" hidden disabled selected>Please refer to me as</option>
-                    <option <%= user.refer_as === 'Female' ? 'selected' : '' %> value="1">Female</option>
-                    <option <%= user.refer_as === 'Male' ? 'selected' : '' %> value="0">Male</option>
-                    <option <%= user.refer_as === 'Other' ? 'selected' : '' %> value="2">Other</option>
+                    <option value="" hidden selected>Please refer to me as</option>
+                    <option
+                      <%= user.refer_as === 'Female' ? 'selected' : '' %>
+                      value="1">Female</option>
+                    <option
+                      <%= user.refer_as === 'Male' ? 'selected' : '' %>
+                      value="0">Male</option>
+                    <option
+                      <%= user.refer_as === 'Other' ? 'selected' : '' %>
+                      value="2">Other</option>
                   </select>
-                  <div id="form-help-refer_as" class="form-text"></div>
+                  <div
+                    id="form-help-refer_as"
+                    class="form-text"></div>
                 </div>
               </div>
               <div class="row">
                 <div class="form-group col-md-12">
                   <label for="form_birthday">Birthday</label>
-                  <input value="<%= user.birthday %>"
-                    type="text" name="birthday" class="form-control" id="form_birthday" placeholder="Birthday">
+                  <input
+                    value="<%= user.birthday %>"
+                    type="text"
+                    name="birthday"
+                    class="form-control datepicker"
+                    id="form_birthday"
+                    placeholder="Birthday">
                   <div id="form-help-birthday" class="form-text"></div>
                 </div>
               </div>
               <div class="row">
                 <div class="form-group col-md-12">
                   <label for="form_bio">Bio</label>
-                  <textarea name="bio" class="form-control" id="form_bio" placeholder="Bio"></textarea>
+                  <textarea
+                    name="bio"
+                    class="form-control"
+                    id="form_bio"
+                    placeholder="Bio"><%= user.bio %></textarea>
                   <div id="form-help-bio" class="form-text"></div>
                 </div>
               </div>
               <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-block mt-2">Update</button>
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-block mt-2">Update</button>
               </div>
             </div>
           </form>

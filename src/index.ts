@@ -19,6 +19,7 @@ const upload = multer({ dest: 'uploads/'});
 dotenv.config();
 
 import signupRequest from './requests/signup_request';
+import profileRequest from './requests/profile_request';
 
 let auth0RequestToken: string | null = null;
 let auth0ExpiredToken = 0;
@@ -74,6 +75,13 @@ const parseErrorValidation = (errors: any) => {
     return Object.fromEntries(errorMsg);
 };
 
+const parsePrismaDate = (date: Date) => {
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = (date.getDate()).toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
+
 const app: Express = express();
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.set('views', path.join(__dirname, 'views'));
@@ -116,6 +124,7 @@ app.get('/profile', requiresAuth(), async (req: Request, res: Response, next: Ne
         family_name: user?.family_name,
         email: user?.email,
         picture: user?.picture,
+        email_verified: user?.email_verified,
         sub: '',
         birthday: '',
         gender: undefined,
@@ -134,6 +143,9 @@ app.get('/profile', requiresAuth(), async (req: Request, res: Response, next: Ne
     });
     if (profile) {
         Object.assign(objUser, profile);
+    }
+    if (profile?.birthday) {
+        objUser.birthday = parsePrismaDate(profile?.birthday);
     }
     await prisma.$disconnect();
     return res.render('parts_layout', { title: 'Work at Aha', page, user: objUser });
@@ -178,7 +190,7 @@ app.post('/signup', [...signupRequest, async (req: Request, res: Response, next:
         const prisma = new PrismaClient();
         const userId: number = Number(user.user_id.split('|')[1]);
         const mailtoken = crypto.randomBytes(36).toString('hex');
-        const updateUser = await prisma.user.update({
+        await prisma.user.update({
             where: {
                 id: userId,
             },
@@ -199,7 +211,7 @@ app.post('/signup', [...signupRequest, async (req: Request, res: Response, next:
         refers.set('1', 'Female');
         refers.set('2', 'Other');
         
-        const createUserProfile = await prisma.profile.create({
+        await prisma.profile.create({
             data: {
                 source_id: `${userId}`,
                 source: 'database',
@@ -323,7 +335,158 @@ app.post('/update-avatar', requiresAuth(), upload.single('image'), async (req: R
         return res.status(403).json({message: 'Unable to upload', error: error.message});
     });
 });
+app.put('/update-profile', [requiresAuth(), ...profileRequest, async (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req);
+    console.log(req.body);
+    if (!errors.isEmpty()) {
+        return res.status(401).json(parseErrorValidation(errors.array()));
+    }
+    const user = req.oidc.user;
+    const subs = user?.sub.split('|');
+    subs[0] = subs[0] === 'auth0' ? 'database' : subs[0];
+    const genders = new Map();
+    genders.set('0', 'Male');
+    genders.set('1', 'Female');
+    genders.set('2', 'Rather not say');
+    genders.set('3', 'Custom');
+    
+    const refers = new Map();
+    refers.set('0', 'Male');
+    refers.set('1', 'Female');
+    refers.set('2', 'Other');
 
+    const prisma = new PrismaClient();
+    const profile = await prisma.profile.findFirst({
+        where: {
+            source: subs[0],
+            source_id: `${subs[1]}`,
+        }
+    });
+    
+    const birthday = req.body.birthday ? req.body.birthday : null;
+    let newDoB = null;
+    if (birthday !== null) {
+        newDoB = new Date(Date.parse(birthday));
+    }
+    if (profile) {
+        await prisma.profile.update({
+            where: {
+                id: profile.id,
+            },
+            data: {
+                given_name: req.body.given_name,
+                family_name: req.body.family_name,
+                gender: genders.has(req.body.gender) ? genders.get(req.body.gender) : null,
+                gender_custom: req.body.custom_gender,
+                refer_as: req.body.refer_as !== '' && refers.has(req.body.refer_as) ? refers.get(req.body.refer_as) : null,
+                bio: req.body.bio,
+                birthday: newDoB,
+                phone: req.body.phone,
+            }
+        });
+    } else {
+        await prisma.profile.create({
+            data: {
+                source_id: `${subs[1]}`,
+                source: subs[0],
+                given_name: req.body.given_name,
+                family_name: req.body.family_name,
+                gender: genders.has(req.body.gender) ? genders.get(req.body.gender) : null,
+                gender_custom: req.body.custom_gender,
+                refer_as: req.body.refer_as !== '' && refers.has(req.body.refer_as) ? refers.get(req.body.refer_as) : null,
+                bio: req.body.bio,
+                birthday: req.body.birthday,
+            }
+        });
+    }
+    await prisma.$disconnect();
+    return res.status(201).json({message: 'Success update profile'});
+}]);
+app.get('/reset-password', requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
+    const users = req.oidc.user;
+    const subs = users?.sub.split('|');
+    if (subs[0] !== 'auth0') {
+        return res.redirect('/profile');
+    }
+    return res.render('parts_layout', {page: 'change_password', title: 'Change password'});
+});
+app.post('/reset-password', [requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
+    const users = req.oidc.user;
+    const subs = users?.sub.split('|');
+    const prisma = new PrismaClient();
+    if (subs[0] !== 'auth0') {
+        return res.redirect('/profile');
+    }
+    let userDb = null;
+    if (req.body.current_password) {
+        userDb = await prisma.user.findFirst({
+            where: {
+                id: Number(subs[1]),
+            }
+        });
+        const isPasswordMatched: boolean = await bcrypt.compare(req.body.current_password, userDb?.password as string);
+        if (!isPasswordMatched) {
+            return res.status(401).json({current_password: 'Make sure that your current password is correct'});
+        }
+    } else {
+        return res.status(401).json({current_password: 'Current password is required'});
+    }
+    if (req.body.new_password) {
+        const value = req.body.new_password;
+        let validPassword = true;
+        const indicators: number[] = [];
+
+        // has lower case and uppercase
+        if ((/[A-Z]/.test(value)) && (/[a-z]/.test(value))) {
+            indicators.push(0);
+        } else {
+            validPassword = false;
+        }
+        // contains numbers
+        if (/[0-9]/.test(value)) {
+            indicators.push(1);
+        } else {
+            validPassword = false;
+        }
+
+        // min 8 , max 200
+        if (/^.{8,200}$/.test(value)) {
+            indicators.push(2);
+        } else {
+            validPassword = false;
+        }
+
+        // has special characters
+        if (/[#?!@$%^&*\-+~'"()_=`]/.test(value)) {
+            indicators.push(3);
+        } else {
+            validPassword = false;
+        }
+        if (!validPassword) {
+            return res.status(401).json({new_password: 'Password is not secure'});
+        }
+    } else {
+        return res.status(401).json({new_password: 'Please provide new password'});
+    }
+    if (req.body.password_confirm) {
+        if (req.body.new_password !== req.body.password_confirm) {
+            return res.status(401).json({password_confirm: 'Password does not match'});
+        }
+    } else {
+        return res.status(401).json({password_confirm: 'Please retype new password'});
+    }
+    const hashPassword = await bcrypt.hashSync(req.body.new_password, 10);
+    await prisma.user.update({
+        where: {
+            id: userDb?.id,
+        },
+        data: {
+            password: hashPassword,
+        }
+    });
+    await prisma.$disconnect();
+    return res.status(201).json({message: 'Success change password'});
+}]);
 app.listen(
     Number(process.env.PORT),
     '0.0.0.0',
