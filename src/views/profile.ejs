@@ -1,38 +1,140 @@
 <a href="/logout" class="btn btn-primary btn-sm">Logout</a><br>
-<div class="profile">
-    <button class="btn btn-info btn-sm edit-profile">Edit</button>
-    <strong><%= user.given_name %></strong><br>
-    <strong><%= user.family_name %></strong><br>
-    <strong><%= user.nickname %></strong><br>
-    <strong><%= user.gender %></strong><br>
-    <strong><%= user.gender_custom !== '' ? `${user.gender_custom} (${user.refer_as})` : '' %></strong><br>
-    <strong><%= user.phone %></strong><br>
-    <strong><%= user.birthday %></strong><br>
-    <strong><%= user.email %></strong><br>
-    <img src="<%= user.picture %>">
-</div>
-<div class="edit-profile">
-    <form action="/save-profile">
-        <div class="container">
-            <div class="row">
-                <div class="form-group col-md-6">
-                    <label for="form_given_name">Name</label>
-                    <input
-                        value="<%= user.given_name %>"
-                        type="text"
-                        name="given_name"
-                        class="form-control" id="form_given_name" placeholder="Name">
-                    <div id="form-help-given-name" class="form-text"></div>
-                </div>
-                <div class="form-group col-md-6">
-                    <label for="form_given_name">Family name</label>
-                    <input
-                        value="<%= user.family_name %>"
-                        type="text"
-                        name="given_name" class="form-control" id="form_given_name" placeholder="Name">
-                    <div id="form-help-given-name" class="form-text"></div>
-                </div>
+<div class="container">
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-column justify-content-center">
+            <div class="d-flex justify-content-center">
+              <img style="width: 200px" src="<%= user.picture %>">
             </div>
+            <div class="text-center mt-1">
+              <button class="btn btn-sm btn-primary edit-picture">Edit</button>
+            </div>
+          </div>
         </div>
-    </form>
+      </div>
+    </div>
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body body-profile collapse show">
+          <div class="row">
+            <div class="col-md-3"><strong>Given name</strong></div>
+            <div class="col-md-7"><%= user.given_name %></div>
+            <div class="col-md-2"><button class="btn btn-sm btn-info edit-profile">Edit</button></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Family name</strong></div>
+            <div class="col-md-9"><%= user.family_name?? '-' %></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Nickname</strong></div>
+            <div class="col-md-9"><%= user.nickname %></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Email</strong></div>
+            <div class="col-md-9"><%= user.email %></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Gender</strong></div>
+            <div class="col-md-9"><%= user.gender === 'Custom' ?  `${user.gender_custom} (${user.refer_as})` : user.gender%></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Phone</strong></div>
+            <div class="col-md-9"><%= user.phone ?? '-' %></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Birthday</strong></div>
+            <div class="col-md-9"><%= user.birthday ?? '-' %></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 pb-1"><strong>Bio</strong></div>
+            <div class="col-md-9"><%= user.bio ?? '-' %></div>
+          </div>
+        </div>
+        <div class="card-body edit-profile-form collapse">
+          <form action="/save-profile">
+            <div class="container">
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="form_email">Email</label>
+                  <input readonly disabled type="email" value="<%= user.email %>" class="form-control" id="form_email" placeholder="Email">
+                  <div id="form-help-email" class="form-text"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="form_given_name">Name</label>
+                  <input value="<%= user.given_name %>" type="text" name="given_name" class="form-control" id="form_given_name"
+                    placeholder="Name">
+                  <div id="form-help-given-name" class="form-text"></div>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="form_given_name">Family name</label>
+                  <input value="<%= user.family_name %>" type="text" name="given_name" class="form-control" id="form_given_name"
+                    placeholder="Name">
+                  <div id="form-help-given-name" class="form-text"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="form_phone">Cellphone</label>
+                  <input value="<%= user.phone %>" type="text" name="phone" class="form-control" id="form_phone" placeholder="Cellpone">
+                  <div id="form-help-phone" class="form-text"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="form_gender">Gender</label>
+                  <select id="form_gender" name="gender" class="form-control">
+                    <option value="" hidden disabled selected>Select gender</option>
+                    <option <%= user.gender === 'Female' ? 'selected' : '' %> value="1">Female</option>
+                    <option <%= user.gender === 'Male' ? 'selected' : '' %> value="0">Male</option>
+                    <option <%= user.gender === 'Rather not say' ? 'selected' : '' %> value="2">Rather not say</option>
+                    <option <%= user.gender === 'Custom' ? 'selected' : '' %> value="3">Custom</option>
+                  </select>
+                  <div id="form-help-gender" class="form-text"></div>
+                </div>
+                <div class="form-group col-md-12 collapse --custom-gender <%= user.gender === 'Custom' ? 'show' : '' %>">
+                  <label for="form_custom_gender">Custom</label>
+                  <input value="<%= user.gender_custom %>" type="text" name="custom_gender" class="form-control" id="form_custom_gender"
+                    placeholder="What is your gender?">
+                  <div id="form-help-custom-gender" class="form-text"></div>
+                </div>
+                <div class="form-group col-md-12 collapse --custom-refer <%= user.gender === 'Custom' ? 'show' : '' %>">
+                  <label for="form_refer_as">Please refer to me as</label>
+                  <select id="form_refer_as" name="refer_as" class="form-control">
+                    <option value="" hidden disabled selected>Please refer to me as</option>
+                    <option <%= user.refer_as === 'Female' ? 'selected' : '' %> value="1">Female</option>
+                    <option <%= user.refer_as === 'Male' ? 'selected' : '' %> value="0">Male</option>
+                    <option <%= user.refer_as === 'Other' ? 'selected' : '' %> value="2">Other</option>
+                  </select>
+                  <div id="form-help-refer_as" class="form-text"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="form_birthday">Birthday</label>
+                  <input value="<%= user.birthday %>"
+                    type="text" name="birthday" class="form-control" id="form_birthday" placeholder="Birthday">
+                  <div id="form-help-birthday" class="form-text"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="form_bio">Bio</label>
+                  <textarea name="bio" class="form-control" id="form_bio" placeholder="Bio"></textarea>
+                  <div id="form-help-bio" class="form-text"></div>
+                </div>
+              </div>
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-block mt-2">Update</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+    </div>
+  </div>
 </div>

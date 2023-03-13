@@ -80,4 +80,8 @@ $(document).ready(() => {
             $('#form_refer_as').val('');
         }
     });
+    $('.edit-profile').click(() => {
+        $('.body-profile').removeClass('show');
+        $('.edit-profile-form').addClass('show');
+    });
 })
