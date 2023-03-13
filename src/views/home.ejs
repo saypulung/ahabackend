@@ -1,3 +1,25 @@
-<strong>Homepage</strong><br>
-<a href="/login" class="btn btn-primary">Login</a>
-<a href="/signup" class="btn btn-primary">Signup</a>
+<div class="homepage">
+    <div class="first-figure">
+        <div class="container">
+            <div class="d-flex justify-content-between p-2">
+                <div class="logo"></div>
+                <div class="opsi">
+                    <% if (autenticated) { %>
+                        <a href="/profile" class="btn btn-primary">Profile</a>
+                    <% } else { %>
+                        <a href="/login" class="btn btn-primary">Login</a>
+                        <a href="/signup" class="btn btn-primary">Signup</a>
+                    <% } %>
+                </div>
+            </div>
+            <div class="quote mt-5 p-2">
+                <h3 class="pb-3">I am an experienced software engineer</h3>
+                <span>Around 6th years I work with code and technology.
+                    Mostly I code PHP as a programming language, MySQL as a DBMS.
+                    As a technology growth, I increase my code skills to be able code Node.js, Python, Golang and Java.
+                </span>
+            </div>   
+        </div>
+        <div class="bg-image"></div>
+    </div>
+</div>

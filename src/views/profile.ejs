@@ -1,0 +1,38 @@
+<a href="/logout" class="btn btn-primary btn-sm">Logout</a><br>
+<div class="profile">
+    <button class="btn btn-info btn-sm edit-profile">Edit</button>
+    <strong><%= user.given_name %></strong><br>
+    <strong><%= user.family_name %></strong><br>
+    <strong><%= user.nickname %></strong><br>
+    <strong><%= user.gender %></strong><br>
+    <strong><%= user.gender_custom !== '' ? `${user.gender_custom} (${user.refer_as})` : '' %></strong><br>
+    <strong><%= user.phone %></strong><br>
+    <strong><%= user.birthday %></strong><br>
+    <strong><%= user.email %></strong><br>
+    <img src="<%= user.picture %>">
+</div>
+<div class="edit-profile">
+    <form action="/save-profile">
+        <div class="container">
+            <div class="row">
+                <div class="form-group col-md-6">
+                    <label for="form_given_name">Name</label>
+                    <input
+                        value="<%= user.given_name %>"
+                        type="text"
+                        name="given_name"
+                        class="form-control" id="form_given_name" placeholder="Name">
+                    <div id="form-help-given-name" class="form-text"></div>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="form_given_name">Family name</label>
+                    <input
+                        value="<%= user.family_name %>"
+                        type="text"
+                        name="given_name" class="form-control" id="form_given_name" placeholder="Name">
+                    <div id="form-help-given-name" class="form-text"></div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

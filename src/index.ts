@@ -89,12 +89,47 @@ app.use(express.urlencoded({ extended: false }));
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     let page = 'home';
     let user = undefined;
+    let autenticated = false;
     if (req.oidc.isAuthenticated()) {
-        page = 'dashboard';
         user = req.oidc.user;
         console.log(user);
+        autenticated = true;
     }
-    return res.render('parts_layout', { title: 'Work at Aha', page, user });
+    return res.render('parts_layout', { title: 'Work at Aha', page, user, autenticated });
+});
+app.get('/profile', async (req: Request, res: Response, next: NextFunction) => {
+    let page = 'profile';
+    if (!req.oidc.isAuthenticated()) {
+        return res.redirect('/');
+    }
+    let user = req.oidc.user;
+    const objUser = {
+        nickname: user?.nickname,
+        given_name: user?.given_name,
+        family_name: user?.family_name,
+        email: user?.email,
+        picture: user?.picture,
+        sub: '',
+        birthday: '',
+        gender: undefined,
+        phone: '',
+    };
+    const prisma = new PrismaClient({
+        log: ['query', 'info', 'warn', 'error'],
+    });
+    const ids: any = user?.sub.split('|');
+    objUser.sub = ids[0];
+    const profile = await prisma.profile.findFirst({
+        where: {
+            source: ids[0] === 'auth0' ? 'database' : ids[0],
+            source_id: ids[1],
+        }
+    });
+    if (profile) {
+        Object.assign(objUser, profile);
+    }
+    await prisma.$disconnect();
+    return res.render('parts_layout', { title: 'Work at Aha', page, user: objUser });
 });
 app.get('/signup', async (req: Request, res: Response, next: NextFunction) => {
     return res.render('parts_layout', { title: 'Signup', page: 'signup' });
@@ -121,14 +156,16 @@ app.post('/signup', [...signupRequest, async (req: Request, res: Response, next:
         user_metadata: {},
         app_metadata: {},
     });
+    // use Auth0 Management API to sync own-DB into Auth0 user database
     const data = await axios.post(`${process.env.AUTH0_DOMAIN}/api/v2/users`, jsonData, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${auth0RequestToken as string}`,
         }
     });
-    console.log(data);
+    
     let user = null;
+    // check is it success when send a user to Auth0
     if (data.status === 201) {
         user = data.data;
         const prisma = new PrismaClient();
@@ -168,7 +205,7 @@ app.post('/signup', [...signupRequest, async (req: Request, res: Response, next:
                 picture: `https://ui-avatars.com/api/?name=${[req.body.given_name,req.body.family_name].join('+').replace(' ','')}`
             }
         });
-
+        await prisma.$disconnect();
         mailgunClient.messages.create(process.env.MAILGUN_DOMAIN as string, {
             from: process.env.MAILGUN_FROM as string,
             to: [email],
@@ -195,6 +232,7 @@ app.get('/verify', async (req: Request, res: Response, next: NextFunction) => {
         });
         if (findUser && findUser.length == 1) {
             if (findUser[0].email_verified) {
+                await prisma.$disconnect();
                 return res.send('Your account is already verified');
             }
             const updateUser = await prisma.user.update({
@@ -207,9 +245,11 @@ app.get('/verify', async (req: Request, res: Response, next: NextFunction) => {
                 },
             });
             if (updateUser) {
+                await prisma.$disconnect();
                 return res.send('Verify account successfuly');
             }
         } else {
+            await prisma.$disconnect();
             return res.send('Account is not found');
         }
     }

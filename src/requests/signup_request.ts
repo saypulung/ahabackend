@@ -4,8 +4,8 @@ import { PrismaClient } from '@prisma/client';
 const signupRequest = [
     body('given_name', 'empty name')
         .trim()
-        .isLength({ min: 5 })
-        .withMessage('min 5')
+        .isLength({ min: 3 })
+        .withMessage('Name at least 3 characters')
         .isLength({ max: 30 })
         .withMessage('max 30'),
     body('family_name', 'empty family name')
@@ -16,14 +16,19 @@ const signupRequest = [
     body('email')
         .isEmail()
         .withMessage('Provide a valid email')
-        .custom(async (value) => {
-            const prisma = new PrismaClient();
-            const findUser = await prisma.user.findMany({
-                take: 1,
-                where: {
-                    email: value,
-                }
+        .custom(async (value: string) => {
+            const prisma = new PrismaClient({
+                log: ['query', 'info', 'warn', 'error'],
             });
+            const findUser = await prisma.user.findMany({
+                where: {
+                    email: {
+                        equals: `${value}`,
+                    },
+                },
+            });
+            console.log(findUser);
+            await prisma.$disconnect();
             if (findUser && findUser.length > 0) {
                 throw new Error('Email is already exist');
             }
@@ -79,7 +84,7 @@ const signupRequest = [
             return validPassword;
         }),
     body('password_confirm')
-        .custom((value, {req}) => value === req.body.password)
+        .custom((value, { req }) => value === req.body.password)
         .withMessage('password confirm does not match with password')
 
 ];
