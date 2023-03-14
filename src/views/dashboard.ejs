@@ -1,1 +1,37 @@
 <a href="/logout" class="btn btn-primary btn-sm">Logout</a><br>
+<table class="table table-dark">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Given name</th>
+            <th>Family name</th>
+            <th>Login count</th>
+            <th>Last login</th>
+        </tr>
+    </thead>
+    <tbody id="all-user-data">
+
+    </tbody>
+</table>
+<script>
+    $(document).ready(() => {
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            url:'/users',
+            success: (response) => {
+                let addData = '';
+                for(var user of response.users) {
+                    addData = '<tr>';
+                    addData += `<td>${user.email}</td>`;
+                    addData += `<td>${user.given_name}</td>`;
+                    addData += `<td>${user.family_name}</td>`;
+                    addData += `<td>${user.logins_count}</td>`;
+                    addData += `<td>${user.last_login}</td></tr>`;
+                    $('#all-user-data').append(addData);
+                    addData = '';
+                }
+            }
+        });
+    })
+</script>

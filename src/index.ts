@@ -259,7 +259,10 @@ app.get('/verify', async (req: Request, res: Response, next: NextFunction) => {
         if (findUser && findUser.length == 1) {
             if (findUser[0].email_verified) {
                 await prisma.$disconnect();
-                return res.send('Your account is already verified');
+                if (req.oidc.user) {
+                    req.oidc.user.email_verified = true;
+                }
+                return res.redirect('/dashboard');
             }
             const updateUser = await prisma.user.update({
                 where: {
@@ -272,7 +275,10 @@ app.get('/verify', async (req: Request, res: Response, next: NextFunction) => {
             });
             if (updateUser) {
                 await prisma.$disconnect();
-                return res.send('Verify account successfuly');
+                if (req.oidc.user) {
+                    req.oidc.user.email_verified = true;
+                }
+                return res.redirect('/dashboard');
             }
         } else {
             await prisma.$disconnect();
@@ -521,14 +527,14 @@ app.post('/pre-register-sso', async (req: Request, res: Response, next: NextFunc
         return res.status(403).send('Please provide email address.');
     }
 });
-app.get('/users', [ async (req: Request, res: Response, next: NextFunction) => {
+app.get('/users', [requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
     const timeNow = new Date().getTime();
     if (timeNow >= auth0ExpiredToken || auth0RequestToken == null) {
         await generateAuth0Token();
     }
     const params = {
         page: 0,
-        per_page: 20,
+        per_page: 100,
         include_totals: true,
         sort: 'created_at:-1',
         fiels: 'user_id,email,given_name,family_name,created_at,updated_at,logins_count,last_login',
@@ -544,6 +550,35 @@ app.get('/users', [ async (req: Request, res: Response, next: NextFunction) => {
         }
     );
     return res.status(200).json(dataUsers.data);
+}]);
+app.get('/resend-verification',[requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
+    const user = req.oidc.user;
+    console.log(user);
+    const prisma = new PrismaClient();
+    const userId: number = Number(user?.sub.split('|')[1]);
+    const mailtoken = crypto.randomBytes(36).toString('hex');
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            email_verified: false,
+            token: mailtoken,
+        },
+    });
+    await prisma.$disconnect();
+    mailgunClient.messages.create(process.env.MAILGUN_DOMAIN as string, {
+        from: process.env.MAILGUN_FROM as string,
+        to: [user?.email],
+        subject: 'Verify you account',
+        html: emailVerification(user?.email, [user?.given_name, user?.family_name].join(' '), mailtoken),
+    })
+        .then(msg => {
+            return res.send('Success sending email verification');
+        })
+        .catch(err => {
+            return res.send('We have problem to resend email verification');
+        });
 }]);
 app.listen(
     Number(process.env.PORT),
