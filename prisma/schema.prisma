@@ -59,6 +59,17 @@ model tokens {
   created DateTime? @default(now()) @db.Timestamp(0)
 }
 
+model userActivity {
+  id      Int       @id @default(autoincrement()) @db.UnsignedInt
+  user_id String    @db.VarChar(190)
+  email   String    @db.VarChar(190)
+  given_name String? @db.VarChar(60)
+  family_name String? @db.VarChar(60)
+  login_at DateTime  @db.Date
+
+  @@map("user_activities")
+}
+
 enum Refer {
   Male
   Female

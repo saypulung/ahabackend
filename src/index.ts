@@ -102,19 +102,46 @@ app.use(
         baseURL: `${process.env.APP_URL}`,
         clientID: process.env.AUTH0_CLIENT_ID,
         secret: process.env.APP_SECRET,
-        // routes: undefined,
+        routes: {
+            login: false,
+        },
     })
 );
 app.use(express.urlencoded({ extended: false }));
-
+app.get('/login', async (req: Request, res: Response, next: NextFunction) => {
+    res.oidc.login({
+        returnTo: `${process.env.APP_URL}/profile`,
+        authorizationParams: {
+            redirect_uri: `${process.env.APP_URL}/callback`
+        }
+    })
+});
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
-    let page = 'home';
+    const page = 'home';
     let user = undefined;
     let autenticated = false;
     if (req.oidc.isAuthenticated()) {
         user = req.oidc.user;
-        console.log(user);
         autenticated = true;
+        const prisma = new PrismaClient();
+        const now: string = parsePrismaDate(new Date());
+        console.log(now);
+        const isLoginToday: Array<Number> | null = await prisma.$queryRaw`SELECT id FROM user_activities WHERE user_id=${
+            user?.sub} and login_at=${new Date(now)} LIMIT 1;`;
+        
+        if (!isLoginToday?.length) {
+            await prisma.userActivity.create({
+                data: {
+                    user_id: user?.sub,
+                    email: user?.email,
+                    login_at: new Date(),
+                    given_name: user?.given_name,
+                    family_name: user?.family_name,
+                }
+            })
+        }
+        
+        await prisma.$disconnect();
     }
     return res.render('parts_layout', { title: 'Work at Aha', page, user, autenticated });
 });
@@ -157,9 +184,9 @@ app.get('/profile', requiresAuth(), async (req: Request, res: Response, next: Ne
     await prisma.$disconnect();
     return res.render('parts_layout', { title: 'Work at Aha', page, user: objUser });
 });
-app.get('/signup', async (req: Request, res: Response, next: NextFunction) => {
-    return res.render('parts_layout', { title: 'Signup', page: 'signup' });
-});
+app.get('/signup', async (req: Request, res: Response, next: NextFunction) =>
+    res.render('parts_layout', { title: 'Signup', page: 'signup' })
+);
 
 app.post('/signup', [...signupRequest, async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
@@ -550,6 +577,72 @@ app.get('/users', [requiresAuth(), async (req: Request, res: Response, next: Nex
         }
     );
     return res.status(200).json(dataUsers.data);
+}]);
+app.get('/user-statistic', [requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
+    const timeNow = new Date().getTime();
+    if (timeNow >= auth0ExpiredToken || auth0RequestToken == null) {
+        await generateAuth0Token();
+    }
+    const params = {
+        page: 0,
+        per_page: 5,
+        include_totals: true,
+        sort: 'created_at:-1',
+        fields: 'user_id,email,given_name,family_name,created_at,updated_at,logins_count,last_login',
+        include_fields: true,
+    };
+    const dataUsers = await axios.get(
+        `${process.env.AUTH0_DOMAIN}/api/v2/users`,
+        {
+            params: params,
+            headers: {
+                'Authorization': `Bearer ${auth0RequestToken}`,
+            }
+        }
+    );
+    const paramStats = {
+        page: 0,
+        per_page: 10,
+        include_totals: true,
+        sort: 'created_at:-1',
+        fields: 'user_id,email,given_name,family_name,created_at,updated_at,logins_count,last_login',
+        include_fields: true,
+        search_engine: 'v2',
+        q: 'last_login:2023-03-12',
+    };
+    const dataStatistic = await axios.get(
+        `${process.env.AUTH0_DOMAIN}/api/v2/users`,
+        {
+            params: paramStats,
+            headers: {
+                'Authorization': `Bearer ${auth0RequestToken}`,
+            }
+        }
+    );
+    const prisma = new PrismaClient();
+    interface countUser {
+        total: Number,
+    };
+    const activeToday: Array<countUser> = await prisma.$queryRaw`select count(id) as total from user_activities where login_at=${parsePrismaDate(new Date)};`;
+    const result = activeToday.length > 0 ? Number(activeToday[0].total) : 0;
+
+    const dateNow = new Date();
+    const dateStart = new Date();
+    dateStart.setDate(dateNow.getDate() - 7);
+
+    const activeThisWeek: Array<countUser> = await prisma.$queryRaw`select count(id) as total 
+    from user_activities 
+    where login_at between ${parsePrismaDate(dateStart)} and ${parsePrismaDate(dateNow)} 
+    group by login_at;`;
+    let resultThisWeek = 0;
+    if (activeThisWeek.length) {
+        let sum = 0;
+        for(let val of activeThisWeek) {
+            sum += Number(val.total);
+        }
+        resultThisWeek = sum / activeThisWeek.length;
+    }
+    return res.status(200).json({total: dataUsers.data.total, today: result, thisweek: resultThisWeek});
 }]);
 app.get('/resend-verification',[requiresAuth(), async (req: Request, res: Response, next: NextFunction) => {
     const user = req.oidc.user;

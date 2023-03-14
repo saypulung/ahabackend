@@ -1,18 +1,63 @@
-<a href="/logout" class="btn btn-primary btn-sm">Logout</a><br>
-<table class="table table-dark">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Given name</th>
-            <th>Family name</th>
-            <th>Login count</th>
-            <th>Last login</th>
-        </tr>
-    </thead>
-    <tbody id="all-user-data">
+<%- include('top_menu') %>
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column">
+                        <strong>Registered user</strong>
+                        <h3 id="registered">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column">
+                        <strong>User active today</strong>
+                        <h3 id="active-today">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column">
+                        <strong>Average this week</strong>
+                        <h3 id="active-this-week">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mt-3">
+                <div class="card-header">All users</div>
+                <div class="card-body">
+                    <table class="table table-dark">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Given name</th>
+                                <th>Family name</th>
+                                <th>Login count</th>
+                                <th>Last login</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-user-data">
+                    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    </tbody>
-</table>
+
 <script>
     $(document).ready(() => {
         $.ajax({
@@ -31,6 +76,16 @@
                     $('#all-user-data').append(addData);
                     addData = '';
                 }
+            }
+        });
+        $.ajax({
+            type: 'get',
+            dataType: 'json',
+            url:'/user-statistic',
+            success: (response) => {
+                $('#registered').html(response.total);
+                $('#active-today').html(response.today);
+                $('#active-this-week').html(response.thisweek);
             }
         });
     })
