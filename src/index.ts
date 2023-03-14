@@ -487,6 +487,29 @@ app.post('/reset-password', [requiresAuth(), async (req: Request, res: Response,
     await prisma.$disconnect();
     return res.status(201).json({message: 'Success change password'});
 }]);
+app.post('/pre-register-sso', async (req: Request, res: Response, next: NextFunction) => {
+    const key = req.header('Kunci');
+    if (key !== process.env.AUTH0_ARTIFICIAL_SECRET) {
+        return res.status(401).send('Invalid key');
+    }
+    const email = req.body.email;
+    if (email) {
+        const prisma = new PrismaClient();
+        const userByEmail = await prisma.user.findFirst({
+            where: {
+                email: email,
+            }
+        });
+        await prisma.$disconnect();
+        if (userByEmail) {
+            return res.status(403).send('You have register with user and password. Please login using the email that you have registered.');
+        } else {
+            return res.status(200).send('Email can be used.');
+        }
+    } else {
+        return res.status(403).send('Please provide email address.');
+    }
+});
 app.listen(
     Number(process.env.PORT),
     '0.0.0.0',
