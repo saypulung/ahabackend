@@ -15,6 +15,7 @@ import ImageKit from 'imagekit';
 import { UploadResponse, IKCallback } from 'imagekit/dist/libs/interfaces';
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/'});
+import helmet from 'helmet';
 
 dotenv.config();
 
@@ -84,6 +85,12 @@ const parsePrismaDate = (date: Date) => {
 
 const app: Express = express();
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Helmet use can be adjust later
+app.use(helmet.frameguard());
+app.use(helmet.referrerPolicy());
+app.use(helmet.ieNoOpen());
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
