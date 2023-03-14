@@ -7,12 +7,14 @@ const signupRequest = [
         .isLength({ min: 3 })
         .withMessage('Name at least 3 characters')
         .isLength({ max: 30 })
-        .withMessage('max 30'),
+        .withMessage('max 30')
+        .escape(),
     body('family_name', 'empty family name')
         .optional({ checkFalsy: true })
         .trim()
         .isLength({ max: 30 })
-        .withMessage('max 30'),
+        .withMessage('max 30')
+        .escape(),
     body('email')
         .isEmail()
         .withMessage('Provide a valid email')
@@ -33,7 +35,7 @@ const signupRequest = [
                 throw new Error('Email is already exist');
             }
             return true;
-        }),
+        }).normalizeEmail(),
     body('phone').optional({ checkFalsy: true })
         .custom((value) => {
             if (value.match(/[0-9() +-]/g).length == value.length) {

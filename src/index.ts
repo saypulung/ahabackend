@@ -92,7 +92,7 @@ app.use(
         authRequired: false,
         auth0Logout: true,
         issuerBaseURL: process.env.AUTH0_DOMAIN,
-        baseURL: `${process.env.APP_URL}:${process.env.PORT}`,
+        baseURL: `${process.env.APP_URL}`,
         clientID: process.env.AUTH0_CLIENT_ID,
         secret: process.env.APP_SECRET,
         // routes: undefined,
@@ -512,8 +512,7 @@ app.post('/pre-register-sso', async (req: Request, res: Response, next: NextFunc
 });
 app.listen(
     Number(process.env.PORT),
-    '0.0.0.0',
     () => {
-        console.log(`Running...${process.env.APP_URL}:${process.env.PORT}`);
+        console.log(`Running...${process.env.APP_URL}`);
         generateAuth0Token();
     });
