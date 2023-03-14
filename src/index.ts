@@ -4,7 +4,7 @@ import fs from 'fs';
 import express, { Request, Response, NextFunction, Express } from 'express';
 import * as dotenv from 'dotenv';
 import { auth, requiresAuth } from 'express-openid-connect';
-import { validationResult } from 'express-validator';
+import { header, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -282,7 +282,11 @@ app.get('/verify', async (req: Request, res: Response, next: NextFunction) => {
     return res.send('Account not found');
 });
 app.get('/dashboard', requiresAuth(), async (req:Request, res: Response, next: NextFunction) => {
-    res.send('auk auk');
+    if (!req.oidc.user?.email_verified) {
+        return res.status(403).render('parts_layout',{page: 'dashboard_denied', title: 'Account not verified'});
+    } else {
+        return res.render('parts_layout',{page: 'dashboard', title: 'Dashboard'});
+    }
 });
 app.post('/update-avatar', requiresAuth(), upload.single('image'), async (req: Request, res: Response, next: NextFunction) => {
     const imagekit = new ImageKit({
@@ -517,6 +521,30 @@ app.post('/pre-register-sso', async (req: Request, res: Response, next: NextFunc
         return res.status(403).send('Please provide email address.');
     }
 });
+app.get('/users', [ async (req: Request, res: Response, next: NextFunction) => {
+    const timeNow = new Date().getTime();
+    if (timeNow >= auth0ExpiredToken || auth0RequestToken == null) {
+        await generateAuth0Token();
+    }
+    const params = {
+        page: 0,
+        per_page: 20,
+        include_totals: true,
+        sort: 'created_at:-1',
+        fiels: 'user_id,email,given_name,family_name,created_at,updated_at,logins_count,last_login',
+        include_fields: true,
+    };
+    const dataUsers = await axios.get(
+        `${process.env.AUTH0_DOMAIN}/api/v2/users`,
+        {
+            params: params,
+            headers: {
+                'Authorization': `Bearer ${auth0RequestToken}`,
+            }
+        }
+    );
+    return res.status(200).json(dataUsers.data);
+}]);
 app.listen(
     Number(process.env.PORT),
     () => {

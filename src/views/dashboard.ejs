@@ -1,9 +1,1 @@
 <a href="/logout" class="btn btn-primary btn-sm">Logout</a><br>
-<% if (user.email_verified === false) { %>
-<div class="blockquote">You need to verify your account to see dashboard. <a href="/send-verification">Verify my account</a></div>
-<% } %>
-<strong><%= user.given_name %></strong><br>
-<strong><%= user.family_name %></strong><br>
-<strong><%= user.nickname %></strong><br>
-<strong><%= user.email %></strong><br>
-<img src="<%= user.picture %>">
