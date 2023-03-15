@@ -1,0 +1,99 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "version": "1.0.0",
+      "title": "Aha Exam Project",
+      "description": "Exam assessment for pulung@aha",
+      "license": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+      }
+    },
+    "tags": [
+        {
+            "name": "Users"
+        }
+    ],
+    "host": "aha.zonahijau.my.id",
+    "basePath": "/",
+    "schemes": ["https"],
+    "paths": {
+        "/login": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "Request login system",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/signup": {
+            "post": {
+                "tags": ["Users"],
+                "summary": "Signup",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/update-avatar": {
+            "post": {
+                "tags": ["Users"],
+                "summary": "Update avatar user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/update-profile": {
+            "put": {
+                "tags": ["Users"],
+                "summary": "Update profile user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/reset-password": {
+            "post": {
+                "tags": ["Users"],
+                "summary": "Update profile user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "List all users in the system",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/user-statistic": {
+            "get": {
+                "tags": ["Users"],
+                "summary": "Statistic user",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        }
+    }
+  }

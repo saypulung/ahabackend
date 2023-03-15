@@ -16,6 +16,8 @@ import { UploadResponse, IKCallback } from 'imagekit/dist/libs/interfaces';
 import multer from 'multer';
 const upload = multer({ dest: 'uploads/'});
 import helmet from 'helmet';
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 dotenv.config();
 
@@ -90,6 +92,8 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(helmet.frameguard());
 app.use(helmet.referrerPolicy());
 app.use(helmet.ieNoOpen());
+const swaggerDoc = require('../swagger.json');
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
