@@ -44,7 +44,7 @@ $(document).ready(() => {
             dataType: 'json',
             data: formData,
             success: (response, status) => {
-                if (status === 'Created') {
+                if (status === 'success') {
                     location.href = '/';
                 } else {
                     toastr.warning("There are some error during send your data");
