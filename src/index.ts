@@ -108,6 +108,7 @@ app.use(
         secret: process.env.APP_SECRET,
         routes: {
             login: false,
+            callback: undefined,
         },
     })
 );
@@ -119,6 +120,18 @@ app.get('/login', async (req: Request, res: Response, next: NextFunction) => {
             redirect_uri: `${process.env.APP_URL}/callback`
         }
     })
+});
+app.get('/callback', async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
+    console.log(req.params);
+    console.log(req.query);
+    res.send('cek console');
+});
+app.post('/callback', async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
+    console.log(req.params);
+    console.log(req.query);
+    res.send('cek console');
 });
 app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const page = 'home';
